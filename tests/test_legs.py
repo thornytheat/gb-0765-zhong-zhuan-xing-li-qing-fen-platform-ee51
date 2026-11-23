@@ -33,3 +33,17 @@ def test_plan_reference():
     files = sample('clean')
     with pytest.raises(DeskError, match='未知航段'):
         references(files['legs.csv'], files['manifest.csv'].replace('NX-01', 'VOID', 1))
+
+
+def test_bad_cap_rejected():
+    files = sample('clean')
+    with pytest.raises(DeskError, match='减载限额'):
+        references(files['legs.csv'].replace('宁波,3', '宁波,-1'), files['manifest.csv'])
+    with pytest.raises(DeskError, match='减载限额'):
+        references(files['legs.csv'].replace('宁波,3', '宁波,3.5'), files['manifest.csv'])
+
+
+def test_cap_parsed_as_integer():
+    files = sample('clean')
+    legs, _, _ = references(files['legs.csv'], files['manifest.csv'])
+    assert all(isinstance(leg['cap'], int) for leg in legs.values())

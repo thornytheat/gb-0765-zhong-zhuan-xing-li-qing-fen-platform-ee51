@@ -2,3 +2,10 @@
 <div class="table-scroll"><table><thead><tr><th>航段</th><th>目的站</th><th>清单</th><th>已装</th><th>待证</th><th>未装</th><th>错装件</th></tr></thead><tbody>
 {% for row in stages.ledger.rows %}<tr><td>{{ row.leg }}</td><td>{{ row.destination }}</td><td class="num">{{ row.manifest }}</td><td class="num">{{ row.loaded }}</td><td class="num">{{ row.pending }}</td><td class="num">{{ row.not_loaded }}</td><td class="num">{{ row.wrong_bags }}</td></tr>{% endfor %}</tbody></table></div>
 <div class="equation"><b>{{ ledger.manifest }}</b><span>清单件</span> = <b>{{ ledger.loaded }}</b><span>已装</span> + <b>{{ ledger.pending }}</b><span>待证</span> + <b>{{ ledger.not_loaded }}</b><span>未装</span></div>
+{% if stages.ledger.slots %}
+<div class="panel-head"><h2>减载补装名额</h2><span>按航段回放末态占用对减载限额 · 合计可补 <b>{{ stages.ledger.slots.totals.remaining }}</b> 件</span></div>
+<div class="table-scroll"><table><thead><tr><th>航段</th><th>目的站</th><th>减载限额</th><th>实际占用</th><th>占用构成</th><th>占用行李牌</th><th>可补名额</th><th>状态</th></tr></thead><tbody>
+{% for row in stages.ledger.slots.rows %}<tr><td>{{ row.leg }}</td><td>{{ row.destination }}</td><td class="num">{{ row.cap }}</td><td class="num">{{ row.occupied }}</td><td class="num"><span title="计划装载 / 待证占舱 / 错装 / 清单外 / 装撤未决">{{ row.planned }} · {{ row.pending }} · {{ row.wrong }} · {{ row.unlisted }} · {{ row.conflict }}</span></td><td>{{ row.occupied_tags|join(', ') or '—' }}</td><td class="num"><b>{{ row.remaining }}</b></td><td>{% if row.overbooked %}<span class="bad">超额 {{ row.occupied - row.cap }} 件</span>{% elif row.remaining == 0 %}<span class="warn">已占满</span>{% else %}<span class="ok">可补装</span>{% endif %}</td></tr>{% endfor %}</tbody></table></div>
+<div class="equation"><b>{{ stages.ledger.slots.totals.cap }}</b><span>限额合计</span> − <b>{{ stages.ledger.slots.totals.occupied }}</b><span>回放占用</span> = <b>{{ stages.ledger.slots.totals.remaining }}</b><span>可补名额</span>{% if stages.ledger.slots.totals.overbooked %}<span class="bad"> · {{ stages.ledger.slots.totals.overbooked }} 个航段超额</span>{% endif %}</div>
+<p class="hint">占用口径：计划装载、待证已占舱、错装件计入实际航段、清单外装载与同刻装撤未决均保守计占；迟到撤下经回放确认末态撤下后才腾名额。名额由原件纯函数复算，补传批次重跑不重复释放。</p>
+{% endif %}

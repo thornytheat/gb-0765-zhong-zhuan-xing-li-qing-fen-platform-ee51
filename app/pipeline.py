@@ -21,7 +21,7 @@ def compute(files, until=None):
     decisions = classify(manifest, history['states'], scans['isolated'] + linked['isolated'])
     if until == 'exceptions':
         return decisions
-    ledger = reconcile(decisions, legs, scans['counts'])
+    ledger = reconcile(decisions, legs, scans['counts'], history['states'], manifest)
     if until == 'ledger':
         return ledger
     return dict(scans=scans, legs=linked, replay=history, exceptions=decisions, ledger=ledger)

@@ -5,7 +5,7 @@ from app.modules.scans.normalize import SENTINELS
 
 
 def references(flights, bags):
-    legs, isolated = master(flights, ('leg', 'flight', 'start', 'end', 'destination'), 'legs.csv', 'leg')
+    legs, isolated = master(flights, ('leg', 'flight', 'start', 'end', 'destination', 'cap'), 'legs.csv', 'leg')
     manifest, manifest_errors = master(bags, ('tag', 'planned'), 'manifest.csv', 'tag')
     for leg in legs.values():
         try:
@@ -14,6 +14,13 @@ def references(flights, bags):
                 raise ValueError('empty window')
         except ValueError as exc:
             raise DeskError('BAD_WINDOW', f"航段 {leg['leg']} 时间窗无效") from exc
+        try:
+            cap = int(leg['cap'])
+            if str(cap) != leg['cap'].strip() or cap < 0:
+                raise ValueError('cap range')
+        except ValueError as exc:
+            raise DeskError('BAD_CAP', f"航段 {leg['leg']} 减载限额无效") from exc
+        leg['cap'] = cap
     if any(row['planned'] not in legs for row in manifest.values()):
         raise DeskError('BAD_PLAN', '清单引用了未知航段')
     return legs, manifest, isolated + manifest_errors
